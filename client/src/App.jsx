@@ -117,6 +117,23 @@ function Dashboard() {
     }
   };
 
+  const handleDeleteLog = async (date) => {
+    if (!currentUser || !date) return;
+    if (!confirm('Are you sure you want to delete this log?')) return;
+
+    try {
+      const token = await currentUser.getIdToken();
+      await axios.delete(`${API_URL}/log/${date}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchLogs();
+      setEditingData(null); // Close dialog
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete log.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans relative">
       {/* Toast Notification */}
@@ -235,6 +252,7 @@ function Dashboard() {
         date={editingData?.date}
         initialData={editingData?.initialData}
         onSave={handleSaveLog}
+        onDelete={handleDeleteLog}
       />
     </div>
   );

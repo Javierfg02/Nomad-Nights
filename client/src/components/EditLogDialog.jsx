@@ -6,9 +6,8 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { getCountryColor } from '../utils/colors';
 
-export default function EditLogDialog({ isOpen, onClose, onSave, date, initialData }) {
+export default function EditLogDialog({ isOpen, onClose, onSave, onDelete, date, initialData }) {
     const [countryName, setCountryName] = useState('');
-    const [city, setCity] = useState('');
     const [loading, setLoading] = useState(false);
 
     // Format date for display (European)
@@ -18,7 +17,6 @@ export default function EditLogDialog({ isOpen, onClose, onSave, date, initialDa
     useEffect(() => {
         if (isOpen) {
             setCountryName(initialData?.country_name || '');
-            setCity(initialData?.city || '');
         }
     }, [isOpen, initialData]);
 
@@ -29,7 +27,6 @@ export default function EditLogDialog({ isOpen, onClose, onSave, date, initialDa
             await onSave({
                 date,
                 country_name: countryName,
-                city: city,
                 // We send iso_timestamp just to satisfy likely backend requirement or keep consistent
                 iso_timestamp: new Date().toISOString()
             });
@@ -74,22 +71,26 @@ export default function EditLogDialog({ isOpen, onClose, onSave, date, initialDa
                             )}
                         </div>
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                            id="city"
-                            value={city}
-                            onChange={(e) => setCity(e.target.value)}
-                            placeholder="e.g. Madrid"
-                        />
-                    </div>
-                    <DialogFooter>
-                        <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading ? 'Saving...' : 'Save Log'}
-                        </Button>
+                    <DialogFooter className="flex justify-between sm:justify-between">
+                        {initialData && (
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => onDelete(date)}
+                                disabled={loading}
+                                className="mr-auto"
+                            >
+                                Delete
+                            </Button>
+                        )}
+                        <div className="flex gap-2">
+                            <Button type="button" variant="ghost" onClick={onClose} disabled={loading}>
+                                Cancel
+                            </Button>
+                            <Button type="submit" disabled={loading}>
+                                {loading ? 'Saving...' : 'Save Log'}
+                            </Button>
+                        </div>
                     </DialogFooter>
                 </form>
             </DialogContent>

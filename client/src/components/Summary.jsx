@@ -6,7 +6,7 @@ export default function Summary({ logs }) {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-white mb-4">Where you spent your nights</h2>
+      <h2 className="text-xl font-bold text-white mb-4">Summary</h2>
       <CountryStats logs={logs} />
     </div>
   );

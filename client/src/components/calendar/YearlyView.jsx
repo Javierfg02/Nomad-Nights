@@ -35,14 +35,14 @@ function MonthGrid({ year, month, logsMap, onDayClick }) {
               onClick={() => onDayClick(dateKey, log)}
               className="aspect-square rounded-sm flex items-center justify-center text-[10px] relative group cursor-pointer transition-transform hover:scale-110 hover:ring-1 hover:ring-white/50"
               style={{
-                backgroundColor: log ? getCountryColor(log.country_code || log.country_name) : '#1E293B',
+                backgroundColor: log ? getCountryColor(log.country_name) : '#1E293B',
                 color: log ? '#fff' : '#475569'
               }}
             >
               {day.getDate()}
               {log && (
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block z-20 whitespace-nowrap bg-slate-900 text-white text-xs px-2 py-1 rounded shadow-lg border border-slate-700 pointer-events-none">
-                  {log.city || log.country_name}
+                  {log.country_name}
                 </div>
               )}
             </div>

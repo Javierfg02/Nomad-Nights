@@ -92,7 +92,7 @@ export default function MonthlyView({ logs, year, onDayClick }) {
             // Let's keep the design consistent: Solid color pill or marker?
             // User liked the yearly look. Let's make the WHOLE cell colored but maybe slightly transparent?
             // Or just solid like yearly view but bigger.
-            bgStyle = { backgroundColor: getCountryColor(log.country_code || log.country_name) };
+            bgStyle = { backgroundColor: getCountryColor(log.country_name) };
           }
 
           return (
@@ -111,7 +111,7 @@ export default function MonthlyView({ logs, year, onDayClick }) {
 
               {log && (
                 <div className="mt-2 text-white font-bold text-shadow-sm truncate">
-                  {log.city || log.country_name}
+                  {log.country_name}
                 </div>
               )}
 

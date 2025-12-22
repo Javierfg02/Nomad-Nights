@@ -9,7 +9,7 @@ export default function AuditGrid({ logs, year }) {
   return (
     <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 mt-6 md:col-span-2">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-        <h2 className="text-2xl font-bold text-white">Calendar ({year})</h2>
+        <h2 className="text-2xl font-bold text-white">Your {year} Calendar</h2>
         <div className="flex bg-slate-900 p-1 rounded-lg self-start sm:self-auto">
           <button
             onClick={() => setViewMode('yearly')}

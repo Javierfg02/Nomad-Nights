@@ -119,16 +119,37 @@ router.post('/log', authenticate, async (req, res) => {
     await docRef.set({
       date: dateOnly,
       iso_timestamp: iso_timestamp || date || new Date().toISOString(),
-      country_code: country_code || null,
       country_name: country_name || null,
-      city: city || null,
-      sub_administrative_area: sub_administrative_area || null,
       updated_at: new Date().toISOString()
     });
 
     res.json({ success: true, message: 'Log saved', id: date });
   } catch (error) {
     console.error('Error saving log:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// DELETE /api/log/:date - Delete a log entry
+router.delete('/log/:date', authenticate, async (req, res) => {
+  if (!db) {
+    return res.status(503).json({ error: 'Database not connected' });
+  }
+
+  try {
+    const { date } = req.params;
+
+    // Basic date validation (YYYY-MM-DD)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Invalid date format. Expected YYYY-MM-DD' });
+    }
+
+    const userId = req.user.uid;
+    await db.collection('users').doc(userId).collection('logs').doc(date).delete();
+
+    res.json({ success: true, message: 'Log deleted' });
+  } catch (error) {
+    console.error('Error deleting log:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
