@@ -1,3 +1,2 @@
-server/serviceAccountKey.json
-server/package-lock.json
+serviceAccountKey.json
 .env

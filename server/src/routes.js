@@ -86,15 +86,31 @@ router.post('/log', authenticate, async (req, res) => {
 
     // Basic validation
     if (!date || (!country_code && !country_name)) {
-      console.log('Validation Error. Received body:', req.body);
+      console.log('Validation Error. Body:', req.body);
       return res.status(400).json({
-        error: 'Missing required fields (date, and either country_code or country_name)',
-        received: req.body
+        error: 'Missing required fields',
+        received_body: req.body,
+        content_type_header: req.headers['content-type'],
+        note: 'If received_body is empty {}, the shortcut might be sending empty JSON.'
       });
     }
 
     // Sanitize date to YYYY-MM-DD
-    const dateOnly = date.includes('T') ? date.split('T')[0] : date;
+    let dateOnly;
+    try {
+      // Handle iOS default format "Dec 22, 2025 at 15:12"
+      const cleanDate = date.replace(/ at /i, ' ');
+      const d = new Date(cleanDate);
+
+      if (isNaN(d.getTime())) {
+        throw new Error('Invalid date');
+      }
+      dateOnly = d.toISOString().split('T')[0];
+    } catch (e) {
+      console.warn('Date parsing failed for:', date);
+      // Fallback: try to split by T if ISO, otherwise just use as is (might fail in frontend)
+      dateOnly = date.includes('T') ? date.split('T')[0] : date;
+    }
 
     // USE THE AUTHENTICATED USER ID
     const userId = req.user.uid;
