@@ -1,39 +1,44 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Summary from './components/Summary';
 import AuditGrid from './components/AuditGrid';
+import Login from './components/Login';
+import Settings from './components/Settings';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { getYear, parseISO, format } from 'date-fns';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-function App() {
+function PrivateRoute({ children }) {
+  const { currentUser } = useAuth();
+  return currentUser ? children : <Navigate to="/login" />;
+}
+
+function Dashboard() {
+  const { currentUser, logout } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [currentUser]);
 
   const fetchLogs = async () => {
+    if (!currentUser) return;
     try {
-      const response = await axios.get(`${API_URL}/logs`);
+      const token = await currentUser.getIdToken();
+      const response = await axios.get(`${API_URL}/logs`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setLogs(response.data);
       setError(null);
     } catch (err) {
       console.error(err);
       setError('Failed to fetch logs. Ensure server is running.');
-      if (import.meta.env.DEV) {
-        console.warn('Using mock data for development demonstration');
-        setLogs([
-          { date: '2025-12-20', country_code: 'US', country_name: 'United States', city: 'New York' },
-          { date: '2025-12-21', country_code: 'ES', country_name: 'Spain', city: 'Madrid' },
-          { date: '2025-01-01', country_code: 'FR', country_name: 'France', city: 'Paris' }, // Different year test
-          { date: '2025-12-22', country_code: 'ES', country_name: 'Spain', city: 'Barcelona' },
-        ]);
-        setError(null);
-      }
     } finally {
       setLoading(false);
     }
@@ -41,7 +46,6 @@ function App() {
 
   const availableYears = useMemo(() => {
     const years = new Set(logs.map(log => getYear(parseISO(log.date))));
-    // Always include selected year (default current) even if no logs
     years.add(selectedYear);
     return Array.from(years).sort((a, b) => b - a);
   }, [logs, selectedYear]);
@@ -61,6 +65,19 @@ function App() {
             <p className="text-slate-400 mt-2">Precision Tax Residency Tracking</p>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              {showSettings ? 'Hide Settings' : 'Settings'}
+            </button>
+            <button
+              onClick={logout}
+              className="text-slate-400 hover:text-red-400 transition-colors"
+            >
+              Logout
+            </button>
+            <div className="h-6 w-px bg-slate-700 mx-2"></div>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -78,6 +95,8 @@ function App() {
             </button>
           </div>
         </header>
+
+        {showSettings && <Settings />}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg">
@@ -97,6 +116,26 @@ function App() {
         )}
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+        </Routes>
+      </AuthProvider>
+    </Router>
   );
 }
 

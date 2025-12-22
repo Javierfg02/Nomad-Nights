@@ -1,47 +1,103 @@
 const express = require('express');
 const router = express.Router();
-const { db } = require('./firebase');
+const { db, admin } = require('./firebase');
+const crypto = require('crypto');
 
-// Middleware for Bearer Token
-const authenticate = (req, res, next) => {
+// Middleware for Dual Authentication (Firebase ID Token OR Custom API Token)
+const authenticate = async (req, res, next) => {
   const authHeader = req.headers.authorization;
   const token = authHeader && authHeader.split(' ')[1];
 
-  if (!process.env.API_KEY) {
-    console.error('API_KEY not set in environment variables');
-    return res.status(500).json({ error: 'Server misconfigured (API_KEY missing)' });
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
   }
 
-  if (token === process.env.API_KEY) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Unauthorized' });
+  try {
+    // 1. Try verify as Firebase ID Token (from Web Dashboard)
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    req.user = { uid: decodedToken.uid };
+    return next();
+  } catch (idTokenError) {
+    // 2. If ID Token fails, check if it's a Custom API Token (from iOS Shortcut)
+    try {
+      if (!db) throw new Error('DB not connected');
+
+      // Query users collection for this api_token
+      const snapshot = await db.collection('users').where('api_token', '==', token).limit(1).get();
+
+      if (snapshot.empty) {
+        return res.status(401).json({ error: 'Unauthorized: Invalid Token' });
+      }
+
+      const userDoc = snapshot.docs[0];
+      req.user = { uid: userDoc.id };
+      return next();
+    } catch (dbError) {
+      console.error('Auth Error:', dbError);
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 };
+
+// --- API Token Management Endpoints ---
+
+// GET /api/token - Retrieve existing API key for the logged-in user
+router.get('/token', authenticate, async (req, res) => {
+  try {
+    const doc = await db.collection('users').doc(req.user.uid).get();
+    if (!doc.exists) {
+      return res.json({ token: null });
+    }
+    return res.json({ token: doc.data().api_token || null });
+  } catch (error) {
+    console.error('Error fetching token:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// POST /api/generate-token - Generate a new API key
+router.post('/generate-token', authenticate, async (req, res) => {
+  try {
+    // Generate a secure random token
+    const newToken = 'nomad_' + crypto.randomBytes(16).toString('hex');
+
+    // Save to Firestore
+    await db.collection('users').doc(req.user.uid).set({
+      api_token: newToken,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
+
+    res.json({ token: newToken });
+  } catch (error) {
+    console.error('Error generating token:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// --- Core Logic Endpoints ---
 
 // POST /api/log
 router.post('/log', authenticate, async (req, res) => {
   if (!db) {
     return res.status(503).json({ error: 'Database not connected' });
   }
-
   try {
     const { date, iso_timestamp, country_code, country_name, city, sub_administrative_area } = req.body;
 
     // Basic validation
     if (!date || (!country_code && !country_name)) {
-      return res.status(400).json({ error: 'Missing required fields (date, and either country_code or country_name)' });
+      console.log('Validation Error. Received body:', req.body);
+      return res.status(400).json({
+        error: 'Missing required fields (date, and either country_code or country_name)',
+        received: req.body
+      });
     }
 
-    // Path: users/{admin_user}/logs/{date}
-    // We assume single user for now, or use a default user ID 'admin'
-    // Sanitize date to YYYY-MM-DD if it comes as ISO string
-    const dateObj = new Date(date);
-    // If date is invalid, this might fail, but we assume ISO format from shortcut.
-    // Ideally use date-fns or simple string split if ISO.
+    // Sanitize date to YYYY-MM-DD
     const dateOnly = date.includes('T') ? date.split('T')[0] : date;
 
-    const userId = 'admin';
+    // USE THE AUTHENTICATED USER ID
+    const userId = req.user.uid;
     const docRef = db.collection('users').doc(userId).collection('logs').doc(dateOnly);
 
     await docRef.set({
@@ -62,22 +118,14 @@ router.post('/log', authenticate, async (req, res) => {
 });
 
 // GET /api/logs
-// Used by Frontend (maybe Basic Auth later, for now protect with same API KEY or open if local?)
-// PRD says Frontend uses Basic Auth (server level). 
-// For now, let's allow fetching logs if authenticated or separate endpoint?
-// The PRD implementation plan implied /api/logs for frontend.
-// We'll protect it simply for now or leave public if just running local.
-// Let's protect it with the same API key for simplicity or check a separate FRONTEND_SECRET.
-// or just leave it open for localhost? 
-// PRD: "API Endpoint rejects 100% of requests without the correct Bearer Token." applies to "Ingress".
-// Frontend calls API. Frontend might need the token too.
-router.get('/logs', async (req, res) => {
+router.get('/logs', authenticate, async (req, res) => {
   if (!db) {
     return res.status(503).json({ error: 'Database not connected' });
   }
 
   try {
-    const userId = 'admin';
+    // USE THE AUTHENTICATED USER ID
+    const userId = req.user.uid;
     const snapshot = await db.collection('users').doc(userId).collection('logs').get();
 
     const logs = [];

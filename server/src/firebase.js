@@ -26,13 +26,18 @@ try {
       admin.initializeApp({
         credential: admin.credential.cert(require(serviceAccountPath))
       });
-      console.log('Firebase Admin initialized successfully.');
+      console.log('Firebase Admin initialized successfully (Service Account).');
     }
   } else {
-    // Only warn if we are not in test mode, to avoid noise
-    if (process.env.NODE_ENV !== 'test') {
-      console.warn('WARNING: serviceAccountKey.json not found. Database features will be disabled (503).');
-      console.warn(`Looked at: ${serviceAccountPath}`);
+    // Fallback to Application Default Credentials (ADC) - for Cloud Functions / Google Cloud
+    try {
+      admin.initializeApp();
+      console.log('Firebase Admin initialized successfully (ADC).');
+    } catch (e) {
+      console.warn('WARNING: serviceAccountKey.json not found and ADC failed. Database features may be disabled.');
+      if (process.env.NODE_ENV !== 'test') {
+        console.warn(`Looked at: ${serviceAccountPath}`);
+      }
     }
   }
 

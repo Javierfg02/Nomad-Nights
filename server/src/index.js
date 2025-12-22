@@ -26,7 +26,10 @@ app.get('/', (req, res) => {
   res.send('Nomad Nights API is running.');
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Test with: curl -X POST http://localhost:${PORT}/api/log -H "Authorization: Bearer ${process.env.API_KEY || 'YOUR_KEY'}" -H "Content-Type: application/json" -d '{"date":"2025-12-22", "country_code":"US"}'`);
-});
+const { onRequest } = require('firebase-functions/v2/https');
+
+// ... (existing code)
+
+// app.listen() is not needed for Cloud Functions
+// exports.api matches the rewrite rule in firebase.json
+exports.api = onRequest(app);
