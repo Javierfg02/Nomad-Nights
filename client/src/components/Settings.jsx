@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import { clsx } from 'clsx';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
@@ -93,7 +94,7 @@ export default function Settings({ selectedYear }) {
     };
 
     return (
-        <div className="mt-8 space-y-6">
+        <div className="mt-8 mb-16 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Automatic Tracker Setup Card */}
                 <div className="lg:col-span-2 bg-slate-900/50 p-6 md:p-8 rounded-2xl border border-slate-800 shadow-xl">
@@ -233,6 +234,11 @@ export default function Settings({ selectedYear }) {
                             <p className="text-slate-500 text-xs mt-0.5">Server Public Key for authenticity</p>
                         </div>
                     </div>
+
+                    <p className="text-slate-400 text-sm mb-6 flex-grow">
+                        Access the cryptographic keys and commands required to audit your signed records.
+                        These tools allow any third party to verify the integrity of your history.
+                    </p>
 
                     <div className="space-y-4">
                         {publicKey ? (

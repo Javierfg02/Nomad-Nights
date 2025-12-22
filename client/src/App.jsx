@@ -209,7 +209,7 @@ function Dashboard() {
           <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white">
-                Your ({selectedYear}) Calendar
+                Your {selectedYear} Calendar
               </h2>
               <div className="flex bg-slate-900 rounded-lg p-1 border border-slate-800">
                 <button
