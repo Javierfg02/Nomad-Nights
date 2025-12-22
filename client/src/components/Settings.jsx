@@ -246,7 +246,7 @@ export default function Settings({ selectedYear }) {
                         The shortcut uses your device's native GPS to provide cryptographically verifiable proof of presence.
                     </div>
                     <a
-                        href="https://www.icloud.com/shortcuts/0144efd5bb9547a79234495ed17cb0fa"
+                        href="https://www.icloud.com/shortcuts/45fa496027a446be8cdc891b7ca93659"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="whitespace-nowrap bg-orange-500 hover:bg-orange-400 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-orange-900/20 transition-all flex items-center gap-2"
