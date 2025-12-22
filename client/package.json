@@ -10,10 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.15",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "firebase": "^12.7.0",
+    "lucide-react": "^0.562.0",
     "react": "^19.2.0",
     "react-calendar-heatmap": "^1.10.0",
     "react-dom": "^19.2.0",

@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOf
 import { getCountryColor } from '../../utils/colors';
 
 // Mini Calendar for a single month
-function MonthGrid({ year, month, logsMap }) {
+function MonthGrid({ year, month, logsMap, onDayClick }) {
   const date = new Date(year, month, 1);
   const start = startOfWeek(startOfMonth(date));
   const end = endOfWeek(endOfMonth(date));
@@ -32,7 +32,8 @@ function MonthGrid({ year, month, logsMap }) {
           return (
             <div
               key={dateKey}
-              className="aspect-square rounded-sm flex items-center justify-center text-[10px] relative group cursor-default transition-transform hover:scale-110"
+              onClick={() => onDayClick(dateKey, log)}
+              className="aspect-square rounded-sm flex items-center justify-center text-[10px] relative group cursor-pointer transition-transform hover:scale-110 hover:ring-1 hover:ring-white/50"
               style={{
                 backgroundColor: log ? getCountryColor(log.country_code || log.country_name) : '#1E293B',
                 color: log ? '#fff' : '#475569'
@@ -52,7 +53,7 @@ function MonthGrid({ year, month, logsMap }) {
   );
 }
 
-export default function YearlyView({ logs, year }) {
+export default function YearlyView({ logs, year, onDayClick }) {
   const logsMap = useMemo(() => {
     const map = {};
     logs.forEach(log => {
@@ -66,7 +67,7 @@ export default function YearlyView({ logs, year }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
       {months.map(month => (
-        <MonthGrid key={month} year={year} month={month} logsMap={logsMap} />
+        <MonthGrid key={month} year={year} month={month} logsMap={logsMap} onDayClick={onDayClick} />
       ))}
     </div>
   );
