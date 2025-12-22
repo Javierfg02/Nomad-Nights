@@ -108,7 +108,10 @@ export default function Settings({ selectedYear }) {
                                 </div>
                                 <div>
                                     <h2 className="text-3xl font-bold text-white tracking-tight">Automatic Tracker Setup</h2>
-                                    <p className="text-slate-400 text-sm mt-1">Configure your device for seamless daily tracking</p>
+                                    <p className="text-slate-400 text-sm mt-1">
+                                        Configure your device for seamless daily tracking •
+                                        <a href="https://github.com/Javierfg02/Nomad-Nights#setup" target="_blank" rel="noopener noreferrer" className="ml-1 text-indigo-400 hover:text-indigo-300 underline underline-offset-2">Setup Guide</a>
+                                    </p>
                                 </div>
                             </div>
 
@@ -196,7 +199,10 @@ export default function Settings({ selectedYear }) {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Official Tax Records</h2>
-                            <p className="text-slate-500 text-xs mt-0.5">Evidentiary records for {selectedYear}</p>
+                            <p className="text-slate-500 text-xs mt-0.5">
+                                Evidentiary records for {selectedYear} •
+                                <a href="https://github.com/Javierfg02/Nomad-Nights#records" target="_blank" rel="noopener noreferrer" className="ml-1 text-emerald-400 hover:text-emerald-300 underline underline-offset-2">Info</a>
+                            </p>
                         </div>
                     </div>
 
@@ -231,7 +237,10 @@ export default function Settings({ selectedYear }) {
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Verification Tools</h2>
-                            <p className="text-slate-500 text-xs mt-0.5">Server Public Key for authenticity</p>
+                            <p className="text-slate-500 text-xs mt-0.5">
+                                Server Public Key for authenticity •
+                                <a href="https://github.com/Javierfg02/Nomad-Nights#verification" target="_blank" rel="noopener noreferrer" className="ml-1 text-blue-400 hover:text-blue-300 underline underline-offset-2">System Theory</a>
+                            </p>
                         </div>
                     </div>
 
