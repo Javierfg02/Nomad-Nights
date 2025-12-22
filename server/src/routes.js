@@ -1,7 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { db, admin } = require('./firebase');
 const crypto = require('crypto');
+const { db, admin } = require('./firebase');
+
+// Load RSA Keys from Environment Variables
+const privateKey = process.env.RSA_PRIVATE_KEY?.replace(/\\n/g, '\n');
+const publicKey = process.env.RSA_PUBLIC_KEY?.replace(/\\n/g, '\n');
+
+if (!privateKey) {
+  console.error('CRITICAL: RSA_PRIVATE_KEY not found. Digital signing will fail.');
+}
+if (!publicKey) {
+  console.warn('WARNING: RSA_PUBLIC_KEY not found. Public key endpoint will return null.');
+}
 
 // Middleware for Dual Authentication (Firebase ID Token OR Custom API Token)
 const authenticate = async (req, res, next) => {
@@ -82,48 +93,60 @@ router.post('/log', authenticate, async (req, res) => {
     return res.status(503).json({ error: 'Database not connected' });
   }
   try {
-    const { date, iso_timestamp, country_code, country_name, city, sub_administrative_area } = req.body;
+    const { date, iso_timestamp, country_name, latitude, longitude } = req.body;
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     // Basic validation
-    if (!date || (!country_code && !country_name)) {
-      console.log('Validation Error. Body:', req.body);
-      return res.status(400).json({
-        error: 'Missing required fields',
-        received_body: req.body,
-        content_type_header: req.headers['content-type'],
-        note: 'If received_body is empty {}, the shortcut might be sending empty JSON.'
-      });
+    if (!date || !country_name) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
     // Sanitize date to YYYY-MM-DD
     let dateOnly;
     try {
-      // Handle iOS default format "Dec 22, 2025 at 15:12"
       const cleanDate = date.replace(/ at /i, ' ');
       const d = new Date(cleanDate);
-
-      if (isNaN(d.getTime())) {
-        throw new Error('Invalid date');
-      }
+      if (isNaN(d.getTime())) throw new Error('Invalid date');
       dateOnly = d.toISOString().split('T')[0];
     } catch (e) {
-      console.warn('Date parsing failed for:', date);
-      // Fallback: try to split by T if ISO, otherwise just use as is (might fail in frontend)
       dateOnly = date.includes('T') ? date.split('T')[0] : date;
     }
 
-    // USE THE AUTHENTICATED USER ID
     const userId = req.user.uid;
+    const updatedAt = new Date().toISOString();
+
+    const logData = {
+      date: dateOnly,
+      iso_timestamp: iso_timestamp || date || updatedAt,
+      country_name: country_name || null,
+      updated_at: updatedAt,
+      gps: (latitude && longitude) ? { lat: latitude, lon: longitude } : null,
+      client_ip: clientIp || null
+    };
+
     const docRef = db.collection('users').doc(userId).collection('logs').doc(dateOnly);
 
-    await docRef.set({
-      date: dateOnly,
-      iso_timestamp: iso_timestamp || date || new Date().toISOString(),
-      country_name: country_name || null,
-      updated_at: new Date().toISOString()
+    // Get previous data for audit trail
+    const prevDoc = await docRef.get();
+    const prevData = prevDoc.exists ? prevDoc.data() : null;
+
+    // Save Log
+    await docRef.set(logData);
+
+    // Create Audit Entry
+    const auditRef = db.collection('users').doc(userId).collection('audit_trail').doc();
+    await auditRef.set({
+      action: prevData ? 'UPDATE' : 'CREATE',
+      target_date: dateOnly,
+      timestamp: updatedAt,
+      new_data: logData,
+      previous_data: prevData,
+      client_ip: clientIp,
+      // In a real blockchain we would hash the prev audit entry here. 
+      // For now, we secure it with server-side timestamps.
     });
 
-    res.json({ success: true, message: 'Log saved', id: date });
+    res.json({ success: true, message: 'Log saved with audit trail', id: dateOnly });
   } catch (error) {
     console.error('Error saving log:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -138,16 +161,31 @@ router.delete('/log/:date', authenticate, async (req, res) => {
 
   try {
     const { date } = req.params;
-
-    // Basic date validation (YYYY-MM-DD)
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
       return res.status(400).json({ error: 'Invalid date format. Expected YYYY-MM-DD' });
     }
 
     const userId = req.user.uid;
-    await db.collection('users').doc(userId).collection('logs').doc(date).delete();
+    const docRef = db.collection('users').doc(userId).collection('logs').doc(date);
+    const prevDoc = await docRef.get();
 
-    res.json({ success: true, message: 'Log deleted' });
+    if (prevDoc.exists) {
+      const prevData = prevDoc.data();
+      await docRef.delete();
+
+      // Log deletion in audit trail
+      const updatedAt = new Date().toISOString();
+      const auditRef = db.collection('users').doc(userId).collection('audit_trail').doc();
+      await auditRef.set({
+        action: 'DELETE',
+        target_date: date,
+        timestamp: updatedAt,
+        previous_data: prevData,
+        client_ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress
+      });
+    }
+
+    res.json({ success: true, message: 'Log deleted and audited' });
   } catch (error) {
     console.error('Error deleting log:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -161,7 +199,6 @@ router.get('/logs', authenticate, async (req, res) => {
   }
 
   try {
-    // USE THE AUTHENTICATED USER ID
     const userId = req.user.uid;
     const snapshot = await db.collection('users').doc(userId).collection('logs').get();
 
@@ -175,6 +212,75 @@ router.get('/logs', authenticate, async (req, res) => {
     console.error('Error fetching logs:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
+});
+
+// GET /api/certificate/:year - Generate a signed compliance certificate
+router.get('/certificate/:year', authenticate, async (req, res) => {
+  if (!db) return res.status(503).json({ error: 'Database not connected' });
+
+  try {
+    const { year } = req.params;
+    const userId = req.user.uid;
+
+    // 1. Fetch all logs for that year
+    const logsSnapshot = await db.collection('users').doc(userId).collection('logs')
+      .where('date', '>=', `${year}-01-01`)
+      .where('date', '<=', `${year}-12-31`)
+      .get();
+
+    const logs = [];
+    logsSnapshot.forEach(doc => logs.push(doc.data()));
+
+    // 2. Fetch relevant audit trail (simplified: just last 100 entries for proof)
+    const auditSnapshot = await db.collection('users').doc(userId).collection('audit_trail')
+      .orderBy('timestamp', 'desc')
+      .limit(100)
+      .get();
+
+    const auditTrail = [];
+    auditSnapshot.forEach(doc => auditTrail.push(doc.data()));
+
+    // 3. Create Manifest
+    const manifest = {
+      version: "1.0",
+      generated_at: new Date().toISOString(),
+      user_id: userId,
+      year: year,
+      log_count: logs.length,
+      data: logs,
+      audit_evidence: auditTrail
+    };
+
+    // 4. Sign Manifest (Cryptographic Proof) using RSA Private Key
+    if (!privateKey) {
+      throw new Error('RSA Private Key is not configured on the server.');
+    }
+
+    let signature;
+    try {
+      const sign = crypto.createSign('SHA256');
+      sign.update(JSON.stringify(manifest));
+      sign.end();
+      signature = sign.sign(privateKey, 'hex');
+    } catch (signError) {
+      console.error('Cryptographic signing failed:', signError);
+      throw new Error('Failed to sign compliance certificate. Ensure RSA keys are valid.');
+    }
+
+    res.json({
+      manifest,
+      signature,
+      verification_notice: "This document is cryptographically signed by Nomad Nights. Use our Public Key to verify its authenticity."
+    });
+  } catch (error) {
+    console.error('Error generating certificate:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /api/public-key - Expose the public key for verification
+router.get('/public-key', (req, res) => {
+  res.json({ publicKey });
 });
 
 module.exports = router;

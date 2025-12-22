@@ -28,7 +28,7 @@ function Dashboard() {
 
   // View State
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [viewMode, setViewMode] = useState('yearly'); // 'yearly' | 'monthly'
+  const [viewMode, setViewMode] = useState('monthly'); // 'yearly' | 'monthly'
 
   const fetchLogs = async () => {
     if (!currentUser) return;
@@ -194,7 +194,7 @@ function Dashboard() {
           </div>
         </header>
 
-        {showSettings && <Settings />}
+        {showSettings && <Settings selectedYear={selectedYear} />}
 
         {error && (
           <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg mb-8 text-sm">
@@ -202,8 +202,8 @@ function Dashboard() {
           </div>
         )}
 
-        {/* Pass filtered logs to Summary so it respects the year filter too */}
-        <Summary logs={filteredLogs} />
+        {/* Pass filtered logs and selectedYear to Summary so it respects the year filter too */}
+        <Summary logs={filteredLogs} selectedYear={selectedYear} />
 
         <div className="space-y-8">
           <div className="bg-slate-900/30 p-6 rounded-2xl border border-slate-800">
