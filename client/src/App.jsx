@@ -135,7 +135,7 @@ function Dashboard() {
             <h1 className="text-3xl font-extrabold text-white tracking-tight">
               Nomad Nights
             </h1>
-            <p className="text-slate-500 text-sm mt-1">Precision Tax Residency Tracking</p>
+            <p className="text-slate-500 text-sm mt-1">Tax Residency Tracking</p>
           </div>
 
           <div className="flex items-center space-x-4">
