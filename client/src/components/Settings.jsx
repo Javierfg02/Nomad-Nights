@@ -227,6 +227,34 @@ export default function Settings({ selectedYear }) {
                     </div>
                 </div>
             )}
+
+            {/* Mobile Installation Section */}
+            <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 shadow-xl">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center text-orange-400">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
+                    </div>
+                    <div>
+                        <h2 className="text-xl font-bold text-white">Mobile Setup</h2>
+                        <p className="text-slate-500 text-xs mt-0.5">Install the official Nomad Log Shortcut</p>
+                    </div>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6 items-center">
+                    <div className="flex-grow text-slate-400 text-sm">
+                        Install our secure iOS Shortcut to log your location with a single tap.
+                        The shortcut uses your device's native GPS to provide cryptographically verifiable proof of presence.
+                    </div>
+                    <a
+                        href="https://www.icloud.com/shortcuts/0144efd5bb9547a79234495ed17cb0fa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="whitespace-nowrap bg-orange-500 hover:bg-orange-400 text-white px-8 py-3 rounded-xl font-bold shadow-lg shadow-orange-900/20 transition-all flex items-center gap-2"
+                    >
+                        Install Shortcut
+                    </a>
+                </div>
+            </div>
         </div>
     );
 }

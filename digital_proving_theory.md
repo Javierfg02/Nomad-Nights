@@ -26,3 +26,10 @@ Digital irrefutability rests on the multi-factor evidence:
 3. **When you were there**: Cryptographic timestamps.
 
 By combining these, we move from "simple logging" to "evidentiary proof" suitable for government body auditing.
+
+## 5. Shortcut Integrity & Security
+A common question is whether a user could "spoof" their location by editing the iOS Shortcut. While iOS Shortcuts are technically editable by the user, the Nomad Nights system maintains integrity through **Multi-Factor Auditing**:
+
+- **External Validation (IP Addresses)**: The server captures the `client_ip` of the request. Spoofing a GPS coordinate in a shortcut is easy; spoofing a residential IP address from a different country is significantly harder. Discrepancies between GPS and IP are flagged in the audit trail.
+- **Immutable Audit Trail**: Because every modification to a log creates a new, timestamped entry in the `audit_trail`, an auditor can see if data was retrospectively modified or if it was logged "in the moment."
+- **Server-Signed Manifests**: The final proof is the signed JSON. Even if a log was manual, the *declaration* is signed by the server, and the auditor can then use the forensic metadata (IP/Timestamp) to decide on its validity.
