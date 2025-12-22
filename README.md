@@ -16,7 +16,7 @@ Tax authorities (like the IRS or European Tax Offices) require irrefutable proof
 ---
 
 <a name="setup"></a>
-## 4. Setup Instructions (iOS/macOS)
+## 4. Setup Instructions (iOS)
 To automate your logs, you must configure the Nomad Nights Shortcut on your device.
 
 ### Step 1: Download the Shortcut
@@ -26,7 +26,7 @@ To automate your logs, you must configure the Nomad Nights Shortcut on your devi
 1.  Go to the **Settings** page in your Nomad Nights dashboard.
 2.  Click **Generate Connection Key** and copy the resulting string.
 3.  Open the iOS Shortcuts app, find "Nomad Nights", and tap the three dots (`...`) to edit.
-4.  Find the variable named `API_CONNECTIVITY_KEY_HERE` (usually in a text block) and **paste your copied key there**.
+4.  Find the step named "Get contents of https://nomad-nights.web.app/api/log/" and click on the arrow button to expand the menu. Under "Headers", find the Authorization header and replace `API_CONNECTIVITY_KEY_HERE` (usually in a text block) with your **copied key**. Leave the `Bearer` prefix.
 
 ### Step 3: Automate Daily
 1.  In the Shortcuts app, tap the **Automation** tab.
