@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOf
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import { getCountryColor } from '../../utils/colors';
+import { countryToISO3 } from '../../utils/countryMapping';
 
 export default function MonthlyView({ logs, year, onDayClick }) {
   // Initialize with January of the selected year, or current month if it matches year
@@ -46,7 +47,15 @@ export default function MonthlyView({ logs, year, onDayClick }) {
     return map;
   }, [logs]);
 
-  const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const weekDays = [
+    { full: 'Sunday', short: 'Sun' },
+    { full: 'Monday', short: 'Mon' },
+    { full: 'Tuesday', short: 'Tue' },
+    { full: 'Wednesday', short: 'Wed' },
+    { full: 'Thursday', short: 'Thu' },
+    { full: 'Friday', short: 'Fri' },
+    { full: 'Saturday', short: 'Sat' },
+  ];
 
   return (
     <div className="bg-slate-900/50 rounded-xl border border-slate-700 overflow-hidden">
@@ -68,8 +77,9 @@ export default function MonthlyView({ logs, year, onDayClick }) {
       {/* Grid */}
       <div className="grid grid-cols-7 border-b border-slate-700">
         {weekDays.map(day => (
-          <div key={day} className="py-3 text-center text-sm font-semibold text-slate-400 border-r border-slate-700 last:border-r-0 bg-slate-900/50">
-            {day}
+          <div key={day.full} className="py-3 text-center text-sm font-semibold text-slate-400 border-r border-slate-700 last:border-r-0 bg-slate-900/50">
+            <span className="hidden sm:inline">{day.full}</span>
+            <span className="inline sm:hidden">{day.short}</span>
           </div>
         ))}
       </div>
@@ -111,7 +121,8 @@ export default function MonthlyView({ logs, year, onDayClick }) {
 
               {log && (
                 <div className="mt-2 text-white font-bold text-shadow-sm truncate">
-                  {log.country_name}
+                  <span className="hidden sm:inline">{log.country_name}</span>
+                  <span className="inline sm:hidden">{countryToISO3(log.country_name)}</span>
                 </div>
               )}
 
