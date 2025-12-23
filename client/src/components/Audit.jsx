@@ -375,18 +375,15 @@ export default function Audit({ selectedYear: initialYear }) {
                                     </div>
                                 </Card>
 
-                                <div className="flex flex-col sm:flex-row items-center justify-between gap-8 p-8 bg-slate-900/30 rounded-[2.5rem] border border-slate-800 shadow-xl group">
-                                    <div className="space-y-1.5 overflow-hidden">
+                                <div className="flex items-center justify-center gap-4 p-6 bg-slate-900/30 rounded-[2rem] border border-slate-800 shadow-xl">
+                                    <div className="text-center space-y-1">
                                         <p className="text-[9px] text-slate-600 uppercase font-black tracking-[0.25em]">Cryptographic Signature Date</p>
-                                        <code className="text-[11px] text-indigo-400/70 font-mono block truncate group-hover:text-indigo-400 transition-colors">
+                                        <code className="text-sm text-indigo-400 font-mono font-bold">
                                             {auditResult.manifest.generated_at}
                                         </code>
                                     </div>
-                                    <Button variant="ghost" className="text-slate-500 hover:text-white hover:bg-slate-800 rounded-2xl px-10 gap-3 font-black text-[10px] uppercase tracking-[0.2em] border border-transparent hover:border-slate-700 transition-all shrink-0 h-14">
-                                        <Download className="h-5 w-5" />
-                                        Save Official Report
-                                    </Button>
                                 </div>
+
                             </div>
                         ) : (
                             <div className="bg-red-500/5 border-2 border-red-500/10 rounded-[3rem] p-20 flex flex-col items-center text-center space-y-10 animate-shake shadow-2xl shadow-red-950/20">
