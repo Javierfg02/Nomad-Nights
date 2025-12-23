@@ -120,7 +120,7 @@ export default function Setup() {
 
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-4 border-t border-slate-800">
                                 <a
-                                    href="https://www.icloud.com/shortcuts/f39a1b73d43344bda6de0ebec4978f24"
+                                    href="https://www.icloud.com/shortcuts/c0d2acfa3b9d4150bf499da78373ee89"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-indigo-900/30 transition-all flex items-center justify-center gap-3 active:scale-95"
