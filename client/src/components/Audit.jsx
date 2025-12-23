@@ -17,9 +17,44 @@ export default function Audit({ selectedYear: initialYear }) {
     const [verifying, setVerifying] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [error, setError] = useState(null);
+    const [availableYears, setAvailableYears] = useState([]);
+    const [isLoadingLogs, setIsLoadingLogs] = useState(true);
 
+    useEffect(() => {
+        const fetchLogsAndComputeYears = async () => {
+            if (!currentUser) return;
+            setIsLoadingLogs(true);
+            try {
+                const token = await currentUser.getIdToken();
+                const response = await axios.get(`${API_URL}/logs`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
 
+                const years = new Set(response.data.map(log => {
+                    try {
+                        return new Date(log.date).getFullYear();
+                    } catch (e) {
+                        return null;
+                    }
+                }).filter(Boolean));
 
+                if (years.size > 0) {
+                    const sortedYears = Array.from(years).sort((a, b) => b - a);
+                    setAvailableYears(sortedYears);
+                    // Default to the most recent year with data
+                    setSelectedYear(sortedYears[0]);
+                } else {
+                    setAvailableYears([]);
+                }
+            } catch (err) {
+                console.error('Failed to fetch log history:', err);
+            } finally {
+                setIsLoadingLogs(false);
+            }
+        };
+
+        fetchLogsAndComputeYears();
+    }, [currentUser]);
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
@@ -178,13 +213,43 @@ export default function Audit({ selectedYear: initialYear }) {
                                     <Download className="w-5 h-5 text-emerald-400" />
                                     Official Records
                                 </CardTitle>
-                                <CardDescription>Get your signed residency proof for {selectedYear}.</CardDescription>
+                                <div className="space-y-4">
+                                    <CardDescription>Get your signed residency proof.</CardDescription>
+                                    <div className="flex flex-col gap-1.5">
+                                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-1">Archive Year</span>
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                            disabled={isLoadingLogs || availableYears.length === 0}
+                                            className={clsx(
+                                                "w-full bg-slate-950 border border-slate-800 text-slate-300 py-2.5 px-4 rounded-xl text-sm font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 hover:bg-slate-900 transition-all appearance-none cursor-pointer shadow-inner pr-10",
+                                                (isLoadingLogs || availableYears.length === 0) && "opacity-50 cursor-not-allowed"
+                                            )}
+                                            style={{
+                                                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                                                backgroundRepeat: 'no-repeat',
+                                                backgroundPosition: 'right 1rem center',
+                                                backgroundSize: '1.25rem'
+                                            }}
+                                        >
+                                            {isLoadingLogs ? (
+                                                <option>Loading history...</option>
+                                            ) : availableYears.length > 0 ? (
+                                                availableYears.map(year => (
+                                                    <option key={year} value={year}>{year} Records</option>
+                                                ))
+                                            ) : (
+                                                <option>No data available</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <Button
                                     onClick={handleDownloadCertificate}
-                                    disabled={downloading}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black h-12 rounded-xl transition-all active:scale-95 shadow-lg shadow-emerald-900/20"
+                                    disabled={downloading || isLoadingLogs || availableYears.length === 0}
+                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black h-12 rounded-xl transition-all active:scale-95 shadow-lg shadow-emerald-900/20 disabled:opacity-50 disabled:bg-slate-800 disabled:shadow-none"
                                 >
                                     {downloading ? (
                                         <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

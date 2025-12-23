@@ -99,8 +99,8 @@ export default function Setup() {
                                         <h4 className="text-white font-bold text-lg">Shortcut Info</h4>
                                     </div>
                                     <p className="text-slate-400 text-sm leading-relaxed">
-                                        Download the Nomad Nights shortcut. Open its settings and find the <span className="text-slate-200 font-bold">URL</span> field.
-                                        Replace the placeholder with your unique <span className="text-indigo-400 font-bold">Connection Key</span>.
+                                        Download the Nomad Nights shortcut. The shortcut captures your <span className="text-slate-200 font-bold">GPS coordinates</span> and sends them to the server, which automatically determines your country.
+                                        Open the shortcut settings, find the <span className="text-slate-200 font-bold">URL</span> field, and replace the placeholder with your unique <span className="text-indigo-400 font-bold">Connection Key</span>.
                                     </p>
                                 </div>
                                 <div className="bg-slate-950/40 p-6 rounded-2xl border border-slate-800/60 relative overflow-hidden group">
@@ -113,14 +113,14 @@ export default function Setup() {
                                     </div>
                                     <p className="text-slate-400 text-sm leading-relaxed">
                                         In the Shortcuts app, create a new <span className="text-slate-200 font-bold">Personal Automation</span>.
-                                        Schedule it to run the shortcut daily at <span className="text-emerald-400 font-bold">11:50 PM</span>. Disable "Ask Before Running".
+                                        Schedule it to run the shortcut daily at <span className="text-emerald-400 font-bold">11:50 PM</span>. Disable "Ask Before Running" for fully automatic logging.
                                     </p>
                                 </div>
                             </div>
 
                             <div className="flex flex-col md:flex-row items-center justify-center gap-6 pt-4 border-t border-slate-800">
                                 <a
-                                    href="https://www.icloud.com/shortcuts/45fa496027a446be8cdc891b7ca93659"
+                                    href="https://www.icloud.com/shortcuts/f39a1b73d43344bda6de0ebec4978f24"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-indigo-900/30 transition-all flex items-center justify-center gap-3 active:scale-95"

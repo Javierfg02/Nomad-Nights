@@ -93,12 +93,44 @@ router.post('/log', authenticate, async (req, res) => {
     return res.status(503).json({ error: 'Database not connected' });
   }
   try {
-    const { date, iso_timestamp, country_name, latitude, longitude } = req.body;
+    let { date, iso_timestamp, country_name, latitude, longitude } = req.body;
     const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
+    // Log incoming request for debugging
+    console.log('Incoming log request:', { date, latitude, longitude, country_name });
+
+    // If country_name is missing but we have coordinates, reverse geocode
+    if (!country_name && latitude && longitude) {
+      try {
+        const axios = require('axios');
+        const geoUrl = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`;
+        console.log('Attempting reverse geocode:', geoUrl);
+        const geoResponse = await axios.get(geoUrl, { timeout: 5000 });
+        country_name = geoResponse.data.countryName || null;
+        console.log(`✅ Reverse geocoded: ${latitude},${longitude} -> ${country_name}`);
+      } catch (geoError) {
+        console.error('❌ Reverse geocoding failed:', geoError.message);
+        return res.status(400).json({
+          error: 'Reverse geocoding failed. Please check your coordinates or try again.',
+          details: geoError.message,
+          received: { latitude, longitude }
+        });
+      }
+    }
+
     // Basic validation
-    if (!date || !country_name) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    if (!date) {
+      return res.status(400).json({
+        error: 'Missing required field: date',
+        received: req.body
+      });
+    }
+
+    if (!country_name) {
+      return res.status(400).json({
+        error: 'Missing country_name. Please provide either country_name OR valid latitude/longitude for geocoding.',
+        received: { date, latitude, longitude, country_name }
+      });
     }
 
     // Sanitize date to YYYY-MM-DD
@@ -146,7 +178,8 @@ router.post('/log', authenticate, async (req, res) => {
       // For now, we secure it with server-side timestamps.
     });
 
-    res.json({ success: true, message: 'Log saved with audit trail', id: dateOnly });
+    console.log(`✅ Log saved: ${dateOnly} -> ${country_name}`);
+    res.json({ success: true, message: 'Log saved with audit trail', id: dateOnly, country: country_name });
   } catch (error) {
     console.error('Error saving log:', error);
     res.status(500).json({ error: 'Internal Server Error' });
